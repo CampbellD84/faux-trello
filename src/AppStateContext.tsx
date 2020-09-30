@@ -1,8 +1,10 @@
-import React, { createContext, useReducer, useContext, PropsWithChildren, Dispatch } from 'react'
+import React, { createContext, useReducer, useContext, useEffect, PropsWithChildren, Dispatch } from 'react'
 import { nanoid } from 'nanoid'
 import { moveItem } from './utils/moveItem'
 import { DragItem } from './DragItem'
 import { findItemIndexById } from './utils/findItemIndexById'
+import { save } from './api'
+import { withData } from './withData'
 
 const AppStateContext = createContext<AppStateContextProps>({} as AppStateContextProps)
 
@@ -117,15 +119,18 @@ const appStateReducer = (state: AppState, action: Action): AppState => {
     }
 }
 
+export const AppStateProvider = withData(({ children, initialState }: PropsWithChildren<{ initialState: AppState }>) => {
+    const [state, dispatch] = useReducer(appStateReducer, initialState)
+    useEffect(() => {
+        save(state)
+    }, [state])
 
-export const AppStateProvider = ({ children }: PropsWithChildren<{}>) => {
-    const [state, dispatch] = useReducer(appStateReducer, appData)
     return (
         <AppStateContext.Provider value={{ state, dispatch }}>
             {children}
         </AppStateContext.Provider>
     )
-}
+})
 
 export const useAppState = () => {
     return useContext(AppStateContext)
